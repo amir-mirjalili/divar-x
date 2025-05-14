@@ -15,7 +15,7 @@ func main() {
 	userCommandHandler := user.NewCommandHandler(userService)
 
 	userChecker := user.NewUserChecker(userRepo)
-	adsRepo := advertise.NewInMemoryUserRepository()
+	adsRepo := advertise.NewInMemoryAdRepository()
 	adsService := advertise.NewAdsService(adsRepo, userChecker)
 	adsCommandHandler := advertise.NewCommandHandler(adsService)
 
@@ -32,7 +32,7 @@ func main() {
 		// Dispatch command
 		if strings.HasPrefix(input, "register") {
 			userCommandHandler.Handle(input)
-		} else if strings.HasPrefix(input, "add_advertise") {
+		} else if strings.HasPrefix(input, "add_advertise") || strings.HasPrefix(input, "rem_advertise") || strings.HasPrefix(input, "list_my_advertises") {
 			adsCommandHandler.Handle(input)
 		} else {
 			fmt.Println("Unknown command.")

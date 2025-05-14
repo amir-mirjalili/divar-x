@@ -1,25 +1,75 @@
 package advertise
 
+import "fmt"
+
 type Repository interface {
-	Exists(username string) bool
-	Save(user Advertise)
+	Exists(title string) bool
+	Save(ad Advertise)
+	Delete(username, title string) error
+	FindByTitle(title string) (Advertise, bool)
+	GetListByUserName(userName string) []Advertise
 }
 
-type InMemoryUserRepository struct {
-	advertises map[string]Advertise
+type InMemoryRepository struct {
+	data map[string][]Advertise
 }
 
-func NewInMemoryUserRepository() *InMemoryUserRepository {
-	return &InMemoryUserRepository{
-		advertises: make(map[string]Advertise),
+func NewInMemoryAdRepository() *InMemoryRepository {
+	return &InMemoryRepository{
+		data: make(map[string][]Advertise),
 	}
 }
 
-func (r *InMemoryUserRepository) Exists(title string) bool {
-	_, exists := r.advertises[title]
-	return exists
+func (r *InMemoryRepository) Exists(title string) bool {
+	for _, ads := range r.data {
+		for _, ad := range ads {
+			if ad.Title == title {
+				return true
+			}
+		}
+	}
+	return false
 }
 
-func (r *InMemoryUserRepository) Save(ads Advertise) {
-	r.advertises[ads.Title] = ads
+func (r *InMemoryRepository) Save(ad Advertise) {
+	r.data[ad.Username] = append(r.data[ad.Username], ad)
+}
+
+func (r *InMemoryRepository) FindByTitle(title string) (Advertise, bool) {
+	for _, ads := range r.data {
+		for _, ad := range ads {
+			if ad.Title == title {
+				return ad, true
+			}
+		}
+	}
+	return Advertise{}, false
+}
+
+func (r *InMemoryRepository) Delete(username, title string) error {
+	ads, ok := r.data[username]
+	if !ok {
+		return fmt.Errorf("access denied")
+	}
+
+	var updated []Advertise
+	found := false
+	for _, ad := range ads {
+		if ad.Title == title {
+			found = true
+			continue
+		}
+		updated = append(updated, ad)
+	}
+
+	if !found {
+		return fmt.Errorf("access denied")
+	}
+
+	r.data[username] = updated
+	return nil
+}
+
+func (r *InMemoryRepository) GetListByUserName(username string) []Advertise {
+	return r.data[username]
 }
